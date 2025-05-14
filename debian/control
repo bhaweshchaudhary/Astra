@@ -1,0 +1,3 @@
+Source: astra Section: utils Priority: optional Maintainer: xAI support@x.aiBuild-Depends: debhelper (>= 13), python3, python3-setuptools Standards-Version: 4.6.0 Homepage: https://github.com/xai-org/astra
+
+Package: astra Architecture: all Depends: python3 (>= 3.6), python3-requests Description: Astra: A Powerful Network Scanner A tool for bug bounty hunters to scan networks by fetching CIDR ranges, extracting IPs, checking live hosts, and scanning ports.
