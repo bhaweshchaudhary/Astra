@@ -1,109 +1,86 @@
 Astra: A Powerful Network Scanner
-Astra is a powerful, modular, and extensible command-line tool designed for bug bounty hunters and security researchers. It automates the process of network reconnaissance by fetching CIDR ranges for a given organization or domain, extracting IP addresses, identifying live hosts, and scanning for open ports. Astra is built with scalability in mind, making it easy to add new features like additional APIs or reporting formats.
+Astra is an open-source network scanning tool designed for security researchers and network administrators. It allows you to scan IP ranges, resolve domains to IPs, and identify open ports with flexible configuration options. Built with Python, Astra leverages local DNS resolution and concurrent scanning for efficiency.
 Features
 
-CIDR Range Retrieval: Fetches CIDR ranges using the ipinfo.io API.
-IP Extraction: Converts CIDR ranges to individual IP addresses.
-Live Host Detection: Identifies responsive hosts using TCP connect.
-Port Scanning: Scans specified ports on live hosts.
-Flexible Configuration: Supports command-line flags and a JSON config file.
-Extensible Reporting: Outputs results to console, JSON, or CSV.
-Scalable Design: Modular architecture for easy feature additions.
+Domain Resolution: Resolves domains (e.g., apple.com) to multiple IPs using dnspython for comprehensive scanning.
+CIDR Scanning: Scan specific CIDR ranges (e.g., 192.168.1.0/24) with optional comma-separated multiple ranges.
+Flexible Port Scanning:
+Scan all 65,535 ports by default.
+Limit to the first 1,000 ports (--first-1000) or 300 ports (--first-300).
+Specify custom ports (--ports 80,443).
+
+IP Limits:
+Global limit with --max-ips to cap the total number of IPs scanned.
+Per-CIDR limit with --max-ips-per-cidr, or use shortcuts --first-1-per-cidr, --first-2-per-cidr, --first-10-per-cidr.
+
+Output Options: Save results in JSON or CSV format.
+Verbose Logging: Detailed logs with --verbose for debugging and monitoring.
+Configurable: Use a config file (~/.astra/config.json) or command-line arguments.
 
 Installation
-Prerequisites
 
-Python 3.6 or higher
-An ipinfo.io API token (free tier available)
-
-Homebrew (macOS)
-brew install astra
-
-GitHub (Clone and Install)
-git clone https://github.com/bhaweshchaudhary/astra.git
+Clone the repository:git clone https://github.com/yourusername/astra.git
 cd astra
-pip install .
 
-apt (Ubuntu/Debian)
-sudo add-apt-repository ppa:xai-org/astra
-sudo apt update
-sudo apt install astra
+Create a virtual environment and activate it:python3 -m venv venv
+source venv/bin/activate
 
-From Source
-git clone https://github.com/bhaweshchaudhary/astra.git
-cd astra
-python3 setup.py install
+Install dependencies:pip install dnspython
 
-Configuration
-Create a configuration file at ~/.astra/config.json to store defaults:
-{
-"api_token": "your_ipinfo_io_token",
+(Optional) Create a config file at ~/.astra/config.json with:{
+"api_token": "",
 "default_ports": "22,80,443,8080,8443",
 "default_timeout": 1.0
 }
 
 Usage
 Run Astra with the following command:
-astra <organization> [options]
+python3 astra.py [org] [options]
 
-Options
+Examples
 
---api-token: ipinfo.io API token (overrides config).
---ports: Comma-separated ports to scan (default: 22,80,443,8080,8443).
---timeout: Timeout for scans in seconds (default: 1.0).
---max-ips: Maximum IPs to scan per CIDR.
---verbose: Enable detailed logging.
---output: File to save results (e.g., results.json).
---output-format: Output format (json or csv, default: json).
---config: Path to config file (default: ~/.astra/config.json).
+Scan all ports for apple.com with a global limit of 100 IPs:python3 astra.py apple.com --max-ips 100 --verbose
 
-Example
-astra apple --api-token your_token --ports 80,443 --timeout 2.0 --max-ips 100 --verbose --output results.json --output-format json
+Scan the first 1,000 ports for facebook.com with a 2-second timeout:python3 astra.py facebook.com --first-1000 --timeout 2.0 --max-ips 100 --verbose
 
-Example Output
-2025-05-14 17:33:45,123 [INFO] Starting scan for apple
-2025-05-14 17:33:45,456 [INFO] Found 3 CIDR ranges: ['17.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
-2025-05-14 17:33:45,789 [INFO] Extracted 300 IPs
-2025-05-14 17:33:46,012 [INFO] Found 10 live hosts
-2025-05-14 17:33:46,013 [INFO] - 17.1.2.3
-...
-2025-05-14 17:33:46,456 [INFO] Found 2 open ports
-2025-05-14 17:33:46,457 [INFO] - 17.1.2.3:80
-2025-05-14 17:33:46,458 [INFO] - 17.1.2.3:443
-2025-05-14 17:33:46,459 [INFO] Results saved as JSON to results.json
+Scan a CIDR range with the first 2 IPs per range:python3 astra.py --cidr 17.44.246.0/23 --first-300 --first-2-per-cidr --verbose
 
-JSON Output
-{
-"organization": "apple",
-"timestamp": "2025-05-14T12:33:46.459123",
-"cidr_ranges": ["17.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
-"live_hosts": ["17.1.2.3", ...],
-"open_ports": [
-{"ip": "17.1.2.3", "port": 80},
-{"ip": "17.1.2.3", "port": 443}
-]
-}
+Scan multiple CIDR ranges:python3 astra.py --cidr 17.44.246.0/23,17.44.248.0/23 --first-300 --first-2-per-cidr --verbose
 
-CSV Output
-IP,Port
-17.1.2.3,80
-17.1.2.3,443
+Command-Line Options
+usage: astra.py [-h] [--api-token API_TOKEN] [--ports PORTS | --first-1000 | --first-300] [--max-ips-per-cidr MAX_IPS_PER_CIDR | --first-1-per-cidr | --first-2-per-cidr | --first-10-per-cidr] [--timeout TIMEOUT] [--max-ips MAX_IPS] [--verbose] [--output OUTPUT] [--output-format {json,csv}] [--config CONFIG] [--cidr CIDR]
+[org]
 
-Legal Disclaimer
-Astra is intended for ethical security research and bug bounty programs. Only scan networks you have explicit permission to test. Unauthorized scanning is illegal and may result in legal consequences. Always adhere to the target organization's bug bounty policy and applicable laws.
+Astra: A Powerful Network Scanner
+
+positional arguments:
+org Organization name or domain (e.g., apple or apple.com), optional if --cidr is provided
+
+optional arguments:
+-h, --help show this help message and exit
+--api-token API_TOKEN ipinfo.io API token (overrides config)
+--ports PORTS Comma-separated ports to scan (e.g., 80,443)
+--first-1000 Scan the first 1000 ports (0-999)
+--first-300 Scan the first 300 ports (0-299)
+--max-ips-per-cidr MAX_IPS_PER_CIDR
+Maximum number of IPs to scan per CIDR range
+--first-1-per-cidr Scan only the first IP per CIDR range
+--first-2-per-cidr Scan only the first 2 IPs per CIDR range
+--first-10-per-cidr Scan only the first 10 IPs per CIDR range
+--timeout TIMEOUT Timeout for host/port scans in seconds (default: 1.0 from config)
+--max-ips MAX_IPS Maximum total number of IPs to scan (global limit)
+--verbose Enable verbose output with detailed logs
+--output OUTPUT File to save results (e.g., results.json)
+--output-format {json,csv}
+Output format (json, csv)
+--config CONFIG Path to config file (default: ~/.astra/config.json)
+--cidr CIDR Comma-separated CIDR ranges to scan (e.g., 192.168.1.0/24), skips domain resolution; org is optional when used
+
 Contributing
-Contributions are welcome! To contribute:
-
-Fork the repository.
-Create a feature branch (git checkout -b feature/new-feature).
-Commit changes (git commit -m "Add new feature").
-Push to the branch (git push origin feature/new-feature).
-Open a pull request.
-
-Please include tests and update documentation as needed.
+Contributions are welcome! Please fork the repository, create a feature branch, and submit a pull request.
 License
-Astra is licensed under the MIT License.
-Contact
-For support or inquiries, contact support@x.ai.
+This project is licensed under the MIT License. See the LICENSE file for details.
+Acknowledgments
 
-Built by xAI
+Built with Python and enhanced with dnspython for robust DNS resolution.
+Inspired by the need for a flexible, local network scanning tool.

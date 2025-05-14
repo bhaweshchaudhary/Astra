@@ -1,90 +1,101 @@
-import ipaddress
 import socket
-import concurrent.futures
 import logging
-from typing import List, Set, Tuple
+from typing import List, Tuple
+from ipaddress import ip_network
+import concurrent.futures
 
-def extract_ips(cidrs: List[str], max_ips: int = None) -> List[str]:
-    """Convert CIDR ranges to a list of IPs."""
+def extract_ips(cidr_ranges: List[str], max_ips: int = None, max_ips_per_cidr: int = None) -> List[str]:
+    """Extract IPs from CIDR ranges, applying global and per-CIDR limits."""
     all_ips = []
-    for cidr in cidrs:
+    for cidr in cidr_ranges:
         try:
-            network = ipaddress.ip_network(cidr, strict=False)
-            ips = [str(ip) for ip in network]
-            if max_ips and len(ips) > max_ips:
-                logging.warning(f"Limiting {cidr} to {max_ips} IPs (out of {len(ips)})")
-                ips = ips[:max_ips]
-            all_ips.extend(ips)
+            network = ip_network(cidr, strict=False)
+            total_ips_in_cidr = network.num_addresses
+            logging.debug(f"Processing CIDR {cidr} with {total_ips_in_cidr} total IPs")
+
+            # Convert CIDR to list of IPs
+            ip_list = [str(ip) for ip in network]
+
+            # Apply per-CIDR limit if specified
+            if max_ips_per_cidr is not None and len(ip_list) > max_ips_per_cidr:
+                logging.info(f"Limiting {cidr} to {max_ips_per_cidr} IPs (out of {total_ips_in_cidr})")
+                ip_list = ip_list[:max_ips_per_cidr]
+            else:
+                logging.debug(f"Using all {len(ip_list)} IPs from {cidr}")
+
+            all_ips.extend(ip_list)
+
+            # Apply global max_ips limit if specified
+            if max_ips is not None and len(all_ips) > max_ips:
+                logging.info(f"Reached global max-ips limit of {max_ips}, truncating IP list")
+                all_ips = all_ips[:max_ips]
+                break
+
         except ValueError as e:
-            logging.error(f"Invalid CIDR {cidr}: {e}")
-    logging.info(f"Extracted {len(all_ips)} IPs")
+            logging.error(f"Invalid CIDR range {cidr}: {e}")
+
     return all_ips
 
 def is_host_alive(ip: str, timeout: float) -> bool:
-    """Check if a host is alive using TCP connect to port 80."""
-    logging.debug(f"Checking if {ip} is alive")
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(timeout)
+    """Check if a host is alive by attempting a TCP connection."""
     try:
-        result = sock.connect_ex((ip, 80))
-        alive = result == 0
-        logging.debug(f"{ip} is {'alive' if alive else 'not alive'}")
-        return alive
-    except socket.error:
-        logging.debug(f"{ip} is not alive (socket error)")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        sock.connect((ip, 80))  # Try port 80 as a common port
+        sock.close()
+        return True
+    except (socket.timeout, socket.error):
         return False
-    finally:
-        sock.close()
 
-def scan_port(ip: str, port: int, timeout: float) -> Tuple[str, int, bool]:
-    """Scan a specific port on an IP."""
-    logging.debug(f"Scanning {ip}:{port}")
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(timeout)
+def scan_port(ip: str, port: int, timeout: float) -> bool:
+    """Scan a specific port on an IP to check if it's open."""
     try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
         result = sock.connect_ex((ip, port))
-        is_open = result == 0
-        logging.debug(f"{ip}:{port} is {'open' if is_open else 'closed'}")
-        return ip, port, is_open
-    except socket.error:
-        logging.debug(f"{ip}:{port} scan failed (socket error)")
-        return ip, port, False
-    finally:
         sock.close()
+        return result == 0
+    except socket.error:
+        return False
 
-def scan_hosts(ips: List[str], timeout: float, max_workers: int = 50) -> Set[str]:
-    """Check which IPs are alive."""
+def scan_network(ips: List[str], ports: List[int], timeout: float) -> Tuple[List[str], List[Tuple[str, int]]]:
+    """Scan a list of IPs for live hosts and open ports."""
+    live_hosts = []
+    open_ports = []
+
+    # Step 1: Find live hosts
     logging.info(f"Scanning {len(ips)} IPs for live hosts")
-    live_hosts = set()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         future_to_ip = {executor.submit(is_host_alive, ip, timeout): ip for ip in ips}
         for future in concurrent.futures.as_completed(future_to_ip):
             ip = future_to_ip[future]
-            try:
-                if future.result():
-                    live_hosts.add(ip)
-            except Exception as e:
-                logging.error(f"Error checking {ip}: {e}")
-    logging.info(f"Found {len(live_hosts)} live hosts")
-    return live_hosts
+            if future.result():
+                live_hosts.append(ip)
 
-def scan_ports(live_hosts: Set[str], ports: List[int], timeout: float, max_workers: int = 100) -> List[Tuple[str, int]]:
-    """Scan specified ports on live hosts."""
-    logging.info(f"Scanning ports {ports} on {len(live_hosts)} live hosts")
-    open_ports = []
+    if not live_hosts:
+        logging.info("No live hosts found")
+        return [], []
+
+    # Step 2: Scan ports on live hosts
+    total_ports = len(ports) * len(live_hosts)
+    logging.info(f"Scanning {len(ports)} ports on {len(live_hosts)} live hosts ({total_ports} total scans)")
+    
+    # Optimize for large port ranges
+    max_workers = min(100, len(live_hosts) * len(ports) // 10 + 1)  # Scale workers based on workload
+    scanned = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_scan = {
-            executor.submit(scan_port, ip, port, timeout): (ip, port)
-            for ip in live_hosts
-            for port in ports
-        }
-        for future in concurrent.futures.as_completed(future_to_scan):
-            ip, port = future_to_scan[future]
-            try:
-                ip, port, is_open = future.result()
-                if is_open:
-                    open_ports.append((ip, port))
-            except Exception as e:
-                logging.error(f"Error scanning {ip}:{port}: {e}")
-    logging.info(f"Found {len(open_ports)} open ports")
-    return open_ports
+        future_to_task = {}
+        for ip in live_hosts:
+            for port in ports:
+                future = executor.submit(scan_port, ip, port, timeout)
+                future_to_task[future] = (ip, port)
+        
+        for future in concurrent.futures.as_completed(future_to_task):
+            ip, port = future_to_task[future]
+            if future.result():
+                open_ports.append((ip, port))
+            scanned += 1
+            if scanned % 1000 == 0:  # Log progress every 1000 scans
+                logging.debug(f"Scanned {scanned}/{total_ports} ports")
+
+    return live_hosts, open_ports
