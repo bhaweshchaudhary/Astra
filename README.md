@@ -19,7 +19,7 @@ Configurable: Use a config file (~/.astra/config.json) or command-line arguments
 
 Installation
 
-Clone the repository:git clone https://github.com/yourusername/astra.git
+Clone the repository:git clone https://github.com/bhaweshchaudhary/astra.git
 cd astra
 
 Create a virtual environment and activate it:python3 -m venv venv
