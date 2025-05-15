@@ -1,4 +1,4 @@
-[https://postimg.cc/8fmdnsBR]
+<img width="554" alt="Screenshot 2025-05-15 at 8 18 01 am" src="https://github.com/user-attachments/assets/728d52f0-f173-4d70-ba9b-d46ae4910265" />
 
 # 🌐 **Astra: A Powerful Network Scanner**
 
