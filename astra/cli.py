@@ -53,8 +53,26 @@ def parse_args() -> argparse.Namespace:
 
     return args
 
+def display_banner():
+    """Display the ASCII art banner for Astra."""
+    banner = """
+###########################################
+# █████╗ ███████╗████████╗██████╗  █████╗ #
+#██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██╔══██╗#
+#███████║███████╗   ██║   ██████╔╝███████║#
+#██╔══██║╚════██║   ██║   ██╔══██╗██╔══██║#
+#██║  ██║███████║   ██║   ██║  ██║██║  ██║#
+#╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝#
+#                                    v1.1 #
+###########################################
+    """
+    print(banner)
+
 def main():
     """Main entry point for Astra CLI."""
+     # Display the banner
+    display_banner()
+
     args = parse_args()
 
     # Set up logging
