@@ -28,7 +28,7 @@ Follow these steps to set up Astra on your system:
 1. **Clone the Repository**:
    - Open a terminal and run:
      ```bash
-     git clone https://github.com/yourusername/astra.git
+     git clone https://github.com/bhaweshchaudhary/Astra.git
      cd astra
      ```
 
@@ -180,7 +180,7 @@ Run `python3 astra.py -h` for the latest options. As of v1.1, the following are 
 - **No GUI**: Command-line only; no graphical interface.
 
 ## Getting Help
-- **GitHub Issues**: Submit questions or bugs at [https://github.com/yourusername/astra](https://github.com/yourusername/astra).
+- **GitHub Issues**: Submit questions or bugs at [https://github.com/bhaweshchaudhary/Astra.git](https://github.com/bhaweshchaudhary/Astra.git).
 - **Documentation**: Refer to `USERGUIDE.md` and `DEVELOPER.md` in the repository.
 - **Community**: Engage with other users via GitHub discussions (if enabled).
 

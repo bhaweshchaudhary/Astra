@@ -37,7 +37,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/bhaweshchaudhary/astra.git
+git clone https://github.com/bhaweshchaudhary/Astra.git
 cd astra
 
 # Create and activate virtual environment
