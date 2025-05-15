@@ -1,35 +1,31 @@
----
-
 # 🌐 **Astra: A Powerful Network Scanner**
 
 **Astra** is an open-source network scanning tool built for security researchers and network administrators. Written in Python, it efficiently scans IP ranges, resolves domains, and detects open ports using local DNS resolution and concurrent scanning.
 
----
-
 ## 🚀 Features
 
-* **🔍 Domain Resolution**
+- **🔍 Domain Resolution**
   Resolve domains (e.g., `apple.com`) to multiple IPs using `dnspython`.
 
-* **📡 CIDR Scanning**
+- **📡 CIDR Scanning**
   Scan single or multiple CIDR ranges, e.g., `192.168.1.0/24`, `10.0.0.0/8`.
 
-* **🔐 Flexible Port Scanning**
+- **🔐 Flexible Port Scanning**
 
-  * Scan all **65,535 ports** by default
-  * Use `--first-1000` or `--first-300` for common ports
-  * Customize with `--ports 80,443,...`
+  - Scan all **65,535 ports** by default
+  - Use `--first-1000` or `--first-300` for common ports
+  - Customize with `--ports 80,443,...`
 
-* **📏 IP Scanning Limits**
+- **📏 IP Scanning Limits**
 
-  * Global IP scan cap with `--max-ips`
-  * CIDR-specific cap with `--max-ips-per-cidr`, or quick options:
+  - Global IP scan cap with `--max-ips`
+  - CIDR-specific cap with `--max-ips-per-cidr`, or quick options:
     `--first-1-per-cidr`, `--first-2-per-cidr`, `--first-10-per-cidr`
 
-* **🧾 Output Options**
+- **🧾 Output Options**
   Save results in **JSON** or **CSV** with `--output-format`
 
-* **🔧 Configuration & Verbose Logging**
+- **🔧 Configuration & Verbose Logging**
   Use CLI flags or a config file (`~/.astra/config.json`)
   Enable detailed logging with `--verbose`
 
@@ -129,7 +125,7 @@ This project is licensed under the [MIT License](./LICENSE).
 
 ## 🙏 Acknowledgments
 
-* Built with Python 🐍 and powered by [`dnspython`](https://www.dnspython.org/)
-* Inspired by the need for flexible, fast, and local-first network scanning tools.
+- Built with Python 🐍 and powered by [`dnspython`](https://www.dnspython.org/)
+- Inspired by the need for flexible, fast, and local-first network scanning tools.
 
 ---
