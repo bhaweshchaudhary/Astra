@@ -45,7 +45,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install dnspython
+pip install -r requirements.txt
 ```
 
 > **Optional**: Create a config file at `~/.astra/config.json`
