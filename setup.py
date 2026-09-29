@@ -10,11 +10,11 @@ setup(
             "astra = astra.cli:main"
         ]
     },
-    author="XyberSec",
+    author="bhaweshchaudhary",
     description="Astra: A Powerful Network Scanner",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/xybersec/astra",
+    url="https://github.com/bhaweshchaudhary/astra",
     license="MIT",
     classifiers=[
         "Programming Language :: Python :: 3",
